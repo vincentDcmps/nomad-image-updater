@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var DockerhubURL = "hub.docker.com"
+var DockerhubURL = "hub.docker.com/"
 
 
 type DockertagJSONResponse struct {
@@ -30,6 +30,9 @@ func (d *DockerhubRepo) Getreleases(host string,name string) []string{
 	if strings.Contains(name,"/") == false{
 		name = fmt.Sprintf("library/%s",name)
 	}
+	if (host==""){
+		host = DockerhubURL
+	}
 	url := fmt.Sprintf("https://%s/v2/repositories/%s/tags?page_size=1000&ordering=last_updated",host,name)
 	resp,err := http.Get(url)
 	if err != nil {
@@ -46,7 +49,7 @@ func (d *DockerhubRepo) Getreleases(host string,name string) []string{
 }
 
 func (d *DockerhubRepo) Validaterepo(repo string ) bool{
-	if  (repo == DockerhubURL)  {
+	if  (repo == DockerhubURL|| repo == "")  {
 		fmt.Println("docker")
 		return true
 	}else{

@@ -72,9 +72,6 @@ func NewDockerImageFromNomadFile(path string) DockerImageslist {
 		image := NewDockerImage(match[imageRegex.SubexpIndex("URL")],
 			match[imageRegex.SubexpIndex("image")],
 			match[imageRegex.SubexpIndex("tag")])
-		if image.URL == "" {
-			image.URL = repoImage.DockerhubURL
-		}
 		resp = append(resp, &image)
 	}
 	return resp
@@ -96,6 +93,8 @@ func(d *DockerImage) UpdateNomadFile(path string){
 		return
 	}
 	r,_ := regexp.Compile(d.ToString(false))
+	fmt.Println(d.ToString(false))
+	fmt.Println(d.ToString(true))
 	newfile := r.ReplaceAllString(string(f),d.ToString(true))
   stat, err :=	os.Stat(path)
 	err = os.WriteFile(path,[]byte(newfile),stat.Mode())
