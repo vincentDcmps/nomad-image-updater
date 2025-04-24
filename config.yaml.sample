@@ -1,0 +1,12 @@
+
+
+remoteCustomOption:
+- contain: ghcr
+  options:
+    username: toto
+    password: githubpat
+
+- contain: consul
+  options:
+    insecureTLS: true
+
