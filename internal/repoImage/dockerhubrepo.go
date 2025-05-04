@@ -30,7 +30,7 @@ func (d *DockerhubRepo) Getreleases(host string,name string) []string{
 	if strings.Contains(name,"/") == false{
 		name = fmt.Sprintf("library/%s",name)
 	}
-	if (host==""){
+	if (len(host)==0){
 		host = DockerhubURL
 	}
 	url := fmt.Sprintf("https://%s/v2/repositories/%s/tags?page_size=1000&ordering=last_updated",host,name)
@@ -49,7 +49,7 @@ func (d *DockerhubRepo) Getreleases(host string,name string) []string{
 }
 
 func (d *DockerhubRepo) Validaterepo(repo string ) bool{
-	if  (repo == DockerhubURL|| repo == "")  {
+	if  (repo == DockerhubURL|| len(repo) == 0)  {
 		fmt.Println("docker")
 		return true
 	}else{

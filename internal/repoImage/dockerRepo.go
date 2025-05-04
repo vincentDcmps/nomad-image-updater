@@ -44,7 +44,11 @@ func (d *DockerRepo) Getreleases(host string, name string) []string{
 }
 
 func (d *DockerRepo) Validaterepo(repo string) bool{
+	if(len(repo) > 0){
 		return true
+	}else{
+		return false
+	}
 }
 
 
