@@ -32,10 +32,18 @@ type Config struct {
 
 }
 
+var configPath = []string{
+	".",
+	"~/.config/nomad-image-updater",
+	"/etc/nomad-image-updater",
+}
+	
 func GetConfig() Config {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml") 
-	viper.AddConfigPath(".")    
+	for _,v := range(configPath){
+		viper.AddConfigPath(v)    
+	}
 	viper.SetDefault("RemoteCustomOption",[]RemoteCustomOption{})
 	viper.ReadInConfig()
 	var config Config
