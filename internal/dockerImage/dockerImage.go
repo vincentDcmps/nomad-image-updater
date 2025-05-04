@@ -116,18 +116,20 @@ func (d *DockerImage) getTags() []string {
 
 
 func (d *DockerImage) GetUpdate() {
+	if d.TagType == "latest"{
+		return 
+	}else if(len(d.TagType) == 0){
+		fmt.Println("No tag type detected")
+		return
+	}
 	r ,_ := regexp.Compile(tagtype[d.TagType])
 	var suffix string
 	var prefix string
 	var lastversion *version.Version
-	if d.TagType == "latest" {
-		return 
-	}else{
-		match := r.FindStringSubmatch(d.Tag)
-		suffix = match[r.SubexpIndex("suffix")]
-		prefix = match[r.SubexpIndex("prefix")]
-		lastversion, _ = version.NewVersion(match[r.SubexpIndex("version")])
-	}
+	match := r.FindStringSubmatch(d.Tag)
+	suffix = match[r.SubexpIndex("suffix")]
+	prefix = match[r.SubexpIndex("prefix")]
+	lastversion, _ = version.NewVersion(match[r.SubexpIndex("version")])
 	taglist := d.getTags()
 	for _,tag := range(taglist) {
 		match2 := r.FindStringSubmatch(tag)
