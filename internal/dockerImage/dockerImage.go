@@ -30,9 +30,9 @@ func (i *DockerImageslist) Addimage(image *DockerImage) *DockerImage {
 
 var tagtype = map[string]string{
 	"version1": `^(?P<prefix>[1-9A-Za-z\-]*)(?P<version>(\d+))(?P<suffix>[1-9A-Za-z\-]*)$`,
-	"version2": `^(?P<prefix>[1-9A-Za-z\-]*)(?P<version>(\d+\.)?(\*|\d+))(?P<suffix>[1-9A-Za-z\-]*)$`,
-	"version3": `^(?P<prefix>[1-9A-Za-z\-]*)(?P<version>(\d+\.)?(\d+\.)?(\*|\d+))(?P<suffix>[1-9A-Za-z\-]*)$`,
-	"latest": "latest|",
+	"version2": `^(?P<prefix>[1-9A-Za-z\-]*)(?P<version>(\d+\.)(\*|\d+))(?P<suffix>[1-9A-Za-z\-]*)$`,
+	"version3": `^(?P<prefix>[1-9A-Za-z\-]*)(?P<version>(\d+\.)(\d+\.)(\*|\d+))(?P<suffix>[1-9A-Za-z\-]*)$`,
+	"latest": `latest|^$`,
 }
 
 type DockerImage struct {
