@@ -40,6 +40,8 @@ array containg a map of two following value:
 
 - improve log management
 - use cobra for command management
+
 - manage pull request from gitea
 - manage url in argument
 - create docker container
+- create test
