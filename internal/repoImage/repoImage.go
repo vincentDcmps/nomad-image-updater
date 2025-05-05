@@ -1,17 +1,14 @@
 package repoImage
 
-type repoImage interface{
+type repoImage interface {
 	Getreleases(host string, name string) []string
 	Validaterepo(string) bool
 }
 
-
-
-
-func GetMapRepo () map[string]repoImage {
+func GetMapRepo() map[string]repoImage {
 	m := map[string]repoImage{
 		"dockerhub": &DockerhubRepo{},
-		"docker": &DockerRepo{},
+		"docker":    &DockerRepo{},
 	}
 	return m
 }

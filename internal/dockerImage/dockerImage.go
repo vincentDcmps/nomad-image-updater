@@ -2,10 +2,10 @@ package dockerImage
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-version"
 	"nomad-image-updater/internal/repoImage"
 	"os"
 	"regexp"
-	"github.com/hashicorp/go-version"
 )
 
 type DockerImageslist []*DockerImage
@@ -32,16 +32,16 @@ var tagtype = map[string]string{
 	"version1": `^(?P<prefix>[1-9A-Za-z\-]*)(?P<version>(\d+))(?P<suffix>[1-9A-Za-z\-]*)$`,
 	"version2": `^(?P<prefix>[1-9A-Za-z\-]*)(?P<version>(\d+\.)(\*|\d+))(?P<suffix>[1-9A-Za-z\-]*)$`,
 	"version3": `^(?P<prefix>[1-9A-Za-z\-]*)(?P<version>(\d+\.)(\d+\.)(\*|\d+))(?P<suffix>[1-9A-Za-z\-]*)$`,
-	"latest": `latest|^$`,
+	"latest":   `latest|^$`,
 }
 
 type DockerImage struct {
-	URL    string
-	Name   string
-	Tag    string 
+	URL     string
+	Name    string
+	Tag     string
 	TagType string
-	NewTag string
-	Update bool
+	NewTag  string
+	Update  bool
 }
 
 func NewDockerImage(URL string, name string, tag string) DockerImage {
@@ -50,8 +50,8 @@ func NewDockerImage(URL string, name string, tag string) DockerImage {
 	im.Name = name
 	im.Tag = tag
 	im.Update = false
-	for k,v :=range tagtype {
-		tagtypeRegex,_ := regexp.Compile(v)
+	for k, v := range tagtype {
+		tagtypeRegex, _ := regexp.Compile(v)
 		match := tagtypeRegex.MatchString(im.Tag)
 		if match {
 			im.TagType = k
@@ -78,30 +78,28 @@ func NewDockerImageFromNomadFile(path string) DockerImageslist {
 	}
 	return resp
 }
- 
-func(d * DockerImage) ToString(newtag bool) string{
-	if newtag && d.NewTag != ""{
-		return fmt.Sprintf("%s%s:%s",d.URL,d.Name,d.NewTag)
-	}else{
-		return fmt.Sprintf("%s%s:%s",d.URL,d.Name,d.Tag)
+
+func (d *DockerImage) ToString(newtag bool) string {
+	if newtag && d.NewTag != "" {
+		return fmt.Sprintf("%s%s:%s", d.URL, d.Name, d.NewTag)
+	} else {
+		return fmt.Sprintf("%s%s:%s", d.URL, d.Name, d.Tag)
 	}
 }
 
-
-func(d *DockerImage) UpdateNomadFile(path string){
-	f,err := os.ReadFile(path)
+func (d *DockerImage) UpdateNomadFile(path string) {
+	f, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	r,_ := regexp.Compile(d.ToString(false))
+	r, _ := regexp.Compile(d.ToString(false))
 	fmt.Println(d.ToString(false))
 	fmt.Println(d.ToString(true))
-	newfile := r.ReplaceAllString(string(f),d.ToString(true))
-  stat, err :=	os.Stat(path)
-	err = os.WriteFile(path,[]byte(newfile),stat.Mode())
-	
-	
+	newfile := r.ReplaceAllString(string(f), d.ToString(true))
+	stat, err := os.Stat(path)
+	err = os.WriteFile(path, []byte(newfile), stat.Mode())
+
 }
 
 func (d *DockerImage) getTags() []string {
@@ -114,15 +112,14 @@ func (d *DockerImage) getTags() []string {
 	return nil
 }
 
-
 func (d *DockerImage) GetUpdate() {
-	if d.TagType == "latest"{
-		return 
-	}else if(len(d.TagType) == 0){
+	if d.TagType == "latest" {
+		return
+	} else if len(d.TagType) == 0 {
 		fmt.Println("No tag type detected")
 		return
 	}
-	r ,_ := regexp.Compile(tagtype[d.TagType])
+	r, _ := regexp.Compile(tagtype[d.TagType])
 	var suffix string
 	var prefix string
 	var lastversion *version.Version
@@ -131,16 +128,16 @@ func (d *DockerImage) GetUpdate() {
 	prefix = match[r.SubexpIndex("prefix")]
 	lastversion, _ = version.NewVersion(match[r.SubexpIndex("version")])
 	taglist := d.getTags()
-	for _,tag := range(taglist) {
+	for _, tag := range taglist {
 		match2 := r.FindStringSubmatch(tag)
 		if len(match2) > 0 && match2[r.SubexpIndex("suffix")] == suffix && match2[r.SubexpIndex("prefix")] == prefix {
 			version, _ := version.NewVersion(match2[r.SubexpIndex("version")])
-			if version.GreaterThan(lastversion){
+			if version.GreaterThan(lastversion) {
 				lastversion = version
-				d.NewTag=tag
-				d.Update=true
+				d.NewTag = tag
+				d.Update = true
 			}
 		}
-		
+
 	}
 }

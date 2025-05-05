@@ -26,9 +26,9 @@ func main() {
 			fmt.Println(image)
 		}
 	}
-	for _,nomadfile := range(nomadfiles){
-		for _,image := range(nomadfile.Images){
-			if image.Update{
+	for _, nomadfile := range nomadfiles {
+		for _, image := range nomadfile.Images {
+			if image.Update {
 				image.UpdateNomadFile(nomadfile.Path)
 			}
 		}
