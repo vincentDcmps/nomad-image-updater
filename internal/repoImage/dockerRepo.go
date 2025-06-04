@@ -17,17 +17,17 @@ type DockerRepo struct {
 }
 
 func (d *DockerRepo) Getreleases(host string, name string) []string {
-	tagsurl, _ := url.Parse(fmt.Sprintf("https://%s/v2/%s/tags/list", host, name))
+	host = replaceUrl(host)
+	tagsurl, _ := url.Parse(fmt.Sprintf("https://%s/v2/%s/tags/list?n=1000", host, name))
 	authHeader, err := getDockerAuth(tagsurl.Host, name)
 	if err != nil {
 		fmt.Printf(err.Error())
 		return nil
 	}
-
 	client := http.Client{}
 	req, err := http.NewRequest("GET", tagsurl.String(), nil)
 	if authHeader != "" {
-		req.Header.Add("Authorisation", fmt.Sprintf("Bearer %s", authHeader))
+		req.Header.Add("authorization", fmt.Sprintf("Bearer %s", authHeader))
 	}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -36,6 +36,7 @@ func (d *DockerRepo) Getreleases(host string, name string) []string {
 	}
 	var tagsListResponse tagsListResponse
 	json.NewDecoder(resp.Body).Decode(&tagsListResponse)
+	fmt.Println(tagsListResponse.Tags)
 	return tagsListResponse.Tags
 
 }
@@ -55,7 +56,7 @@ func getDockerAuth(host string, name string) (string, error) {
 	} else {
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: false}
 	}
-	resp, err := http.Get(fmt.Sprintf("https://%s/v2", host))
+	resp, err := http.Get(fmt.Sprintf("https://%s/v2/_catalog", host))
 	if err != nil {
 		return "", err
 	}
@@ -81,7 +82,7 @@ func getDockerAuth(host string, name string) (string, error) {
 		return tokenResponse.Token, nil
 
 	} else {
-		return "", errors.New("unmanage auth return code")
+		return "", errors.New(fmt.Sprintf("unmanage auth return code %d",resp.StatusCode))
 	}
 
 }
@@ -98,6 +99,15 @@ type tagsListResponse struct {
 func basicAuth(username, password string) string {
 	auth := username + ":" + password
 	return base64.StdEncoding.EncodeToString([]byte(auth))
+}
+func replaceUrl(host string) string{
+	config := config.GetConfig()
+	for _,getTagReplaceURL := range config.GetTagReplaceURL {
+		if strings.Contains(host,getTagReplaceURL.Target){
+			return getTagReplaceURL.Replace
+		}
+	}
+	return host
 }
 
 func getRemoteOptions(host string) config.RemoteOptions {

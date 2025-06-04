@@ -4,6 +4,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+type GetTagReplaceURL struct {
+	Target string `mapstructure:"target"`
+	Replace string  `mapstructure:"replace"` 
+}	
 type RemoteCustomOption struct {
 	Contain string        `mapstructure:"contain"`
 	Options RemoteOptions `mapstructure:"options"`
@@ -28,6 +32,7 @@ func (r *RemoteOptions) Merge(r1 RemoteOptions) {
 }
 
 type Config struct {
+	GetTagReplaceURL []GetTagReplaceURL
 	RemoteCustomOption []RemoteCustomOption `mapstructure:"remoteCustomOption"`
 }
 
