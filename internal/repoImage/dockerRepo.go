@@ -20,7 +20,7 @@ type DockerRepo struct {
 
 func (d *DockerRepo) Getreleases(host string, name string) []string {
 	host = replaceUrl(host)
-	tagsurl, _ := url.Parse(fmt.Sprintf("https://%s/v2/%s/tags/list?n=1000", host, name))
+	tagsurl, _ := url.Parse(fmt.Sprintf("https://%s/v2/%s/tags/list", host, name))
 	authHeader, err := getDockerAuth(tagsurl.Host, name)
 	if err != nil {
 		slog.Error(err.Error())
