@@ -1,17 +1,20 @@
 package config
 
 import (
-
 	"github.com/spf13/viper"
 )
 
+type Git struct {
+	Enabled   bool   `mapstructure:"enabled"`
+	RefBranch string `mapstructure:"refbranch"`
+}
 type LoggerOption struct {
 	Level string `mapstructure:"level"`
 }
 type GetTagReplaceURL struct {
-	Target string `mapstructure:"target"`
-	Replace string  `mapstructure:"replace"` 
-}	
+	Target  string `mapstructure:"target"`
+	Replace string `mapstructure:"replace"`
+}
 type RemoteCustomOption struct {
 	Contain string        `mapstructure:"contain"`
 	Options RemoteOptions `mapstructure:"options"`
@@ -36,9 +39,10 @@ func (r *RemoteOptions) Merge(r1 RemoteOptions) {
 }
 
 type Config struct {
-	GetTagReplaceURL []GetTagReplaceURL
+	GetTagReplaceURL   []GetTagReplaceURL
 	RemoteCustomOption []RemoteCustomOption `mapstructure:"remoteCustomOption"`
-	LoggerOption LoggerOption
+	LoggerOption       LoggerOption
+	Git                Git
 }
 
 var configPath = []string{
@@ -48,13 +52,15 @@ var configPath = []string{
 }
 
 func GetConfig() Config {
-	viper.SetConfigName("config")
+	viper.SetConfigName("nomad-image-updater")
 	viper.SetConfigType("yaml")
 	for _, v := range configPath {
 		viper.AddConfigPath(v)
 	}
 	viper.SetDefault("RemoteCustomOption", []RemoteCustomOption{})
 	viper.SetDefault("LoggerOption.Level", "DEBUG")
+	viper.SetDefault("Git.enabled", false)
+	viper.SetDefault("Git.refbranch", "master")
 	viper.ReadInConfig()
 	var config Config
 	viper.Unmarshal(&config)

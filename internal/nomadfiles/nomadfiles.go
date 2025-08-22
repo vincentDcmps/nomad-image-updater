@@ -9,8 +9,9 @@ import (
 )
 
 type Nomadfile struct {
-	Path   string
-	Images []*dockerImage.DockerImage
+	Path    string
+	Images  []*dockerImage.DockerImage
+	Updated bool
 }
 
 func GetNomadFiles(path string) []*Nomadfile {
@@ -23,8 +24,10 @@ func GetNomadFiles(path string) []*Nomadfile {
 		}
 		if slices.Contains(nomadextention, filepath.Ext(path)) {
 
-			var nomadfile Nomadfile
-			nomadfile.Path = path
+			nomadfile := Nomadfile{
+				Path:    path,
+				Updated: false,
+			}
 			nomadfiles = append(nomadfiles, &nomadfile)
 		}
 		return nil
@@ -34,4 +37,9 @@ func GetNomadFiles(path string) []*Nomadfile {
 	}
 
 	return nomadfiles
+}
+
+func (n *Nomadfile) GetFileName() string {
+	return filepath.Base(n.Path)
+
 }

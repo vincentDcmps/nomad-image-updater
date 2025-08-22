@@ -44,7 +44,7 @@ func (d *DockerhubRepo) Getreleases(host string, name string) []string {
 	for _, result := range dockertagResponse.Results {
 		res = append(res, result.Name)
 	}
-	slog.Debug(fmt.Sprintf("%d tags found",len(res)),"image",name)
+	slog.Debug(fmt.Sprintf("%d tags found", len(res)), "image", name)
 	return res
 }
 

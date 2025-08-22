@@ -2,8 +2,8 @@ package dockerImage
 
 import (
 	"fmt"
-	"log/slog"
 	"github.com/hashicorp/go-version"
+	"log/slog"
 	"nomad-image-updater/internal/repoImage"
 	"os"
 	"regexp"
@@ -115,7 +115,7 @@ func (d *DockerImage) GetUpdate() {
 	if d.TagType == "latest" {
 		return
 	} else if len(d.TagType) == 0 {
-		slog.Info(fmt.Sprintf("No tag type detected for %s",d.Name),"image",d.Name)
+		slog.Info(fmt.Sprintf("No tag type detected for %s", d.Name), "image", d.Name)
 		return
 	}
 	r, _ := regexp.Compile(tagtype[d.TagType])

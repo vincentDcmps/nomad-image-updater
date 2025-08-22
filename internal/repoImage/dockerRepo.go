@@ -38,8 +38,8 @@ func (d *DockerRepo) Getreleases(host string, name string) []string {
 	}
 	var tagsListResponse tagsListResponse
 	json.NewDecoder(resp.Body).Decode(&tagsListResponse)
-	
-	slog.Debug(fmt.Sprintf("%d tag found",len(tagsListResponse.Tags)),"image",name)
+
+	slog.Debug(fmt.Sprintf("%d tag found", len(tagsListResponse.Tags)), "image", name)
 	return tagsListResponse.Tags
 
 }
@@ -85,7 +85,7 @@ func getDockerAuth(host string, name string) (string, error) {
 		return tokenResponse.Token, nil
 
 	} else {
-		return "", errors.New(fmt.Sprintf("unmanage auth return code %d",resp.StatusCode))
+		return "", errors.New(fmt.Sprintf("unmanage auth return code %d", resp.StatusCode))
 	}
 
 }
@@ -103,10 +103,10 @@ func basicAuth(username, password string) string {
 	auth := username + ":" + password
 	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
-func replaceUrl(host string) string{
+func replaceUrl(host string) string {
 	config := config.GetConfig()
-	for _,getTagReplaceURL := range config.GetTagReplaceURL {
-		if strings.Contains(host,getTagReplaceURL.Target){
+	for _, getTagReplaceURL := range config.GetTagReplaceURL {
+		if strings.Contains(host, getTagReplaceURL.Target) {
 			return getTagReplaceURL.Replace
 		}
 	}
