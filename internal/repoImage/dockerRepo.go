@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gboddin/go-www-authenticate-parser"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"nomad-image-updater/internal/config"
 	"strings"
+
+	"github.com/gboddin/go-www-authenticate-parser"
 )
 
 type DockerRepo struct {
@@ -21,7 +23,7 @@ func (d *DockerRepo) Getreleases(host string, name string) []string {
 	tagsurl, _ := url.Parse(fmt.Sprintf("https://%s/v2/%s/tags/list?n=1000", host, name))
 	authHeader, err := getDockerAuth(tagsurl.Host, name)
 	if err != nil {
-		fmt.Printf(err.Error())
+		slog.Error(err.Error())
 		return nil
 	}
 	client := http.Client{}
@@ -31,12 +33,13 @@ func (d *DockerRepo) Getreleases(host string, name string) []string {
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf(err.Error())
+		slog.Error(err.Error())
 		return nil
 	}
 	var tagsListResponse tagsListResponse
 	json.NewDecoder(resp.Body).Decode(&tagsListResponse)
-	fmt.Println(tagsListResponse.Tags)
+	
+	slog.Debug(fmt.Sprintf("%d tag found",len(tagsListResponse.Tags)),"image",name)
 	return tagsListResponse.Tags
 
 }

@@ -33,15 +33,14 @@ config file can have follwing setting
 ### remoteCustomOption
 
 array containg a map of two following value:
-- contain:string to check if option need to be apply on docker repository
+
+- contain: string to check if option need to be apply on docker repository
 - options: possible option are: username,password and insecureTLS
 
 ## ToDo
 
-- improve log management
 - use cobra for command management
-
-- manage pull request from gitea
-- manage url in argument
-- create docker container
+- manage pull request from gitea 
+- manage url in argument to got directly git forge
+- use a meta in task to got release note link
 - create test

@@ -3,6 +3,7 @@ package repoImage
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 )
@@ -43,12 +44,13 @@ func (d *DockerhubRepo) Getreleases(host string, name string) []string {
 	for _, result := range dockertagResponse.Results {
 		res = append(res, result.Name)
 	}
+	slog.Debug(fmt.Sprintf("%d tags found",len(res)),"image",name)
 	return res
 }
 
 func (d *DockerhubRepo) Validaterepo(repo string) bool {
 	if repo == DockerhubURL || len(repo) == 0 {
-		fmt.Println("docker")
+		slog.Debug("Docker Hub Image")
 		return true
 	} else {
 		return false

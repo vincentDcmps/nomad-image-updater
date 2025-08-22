@@ -2,6 +2,7 @@ package dockerImage
 
 import (
 	"fmt"
+	"log/slog"
 	"github.com/hashicorp/go-version"
 	"nomad-image-updater/internal/repoImage"
 	"os"
@@ -66,7 +67,7 @@ func NewDockerImageFromNomadFile(path string) DockerImageslist {
 	imageRegex, _ := regexp.Compile(`image\s*=\s*\"(?P<repo>(?P<URL>[^:@\n\/]*\.[^:@\n\/]*(:\d*)?\/)?(?P<image>[^:@\n]*))(:(?P<tag>[^:@\n]*))?(@.*:.*)?\"`)
 	f, err := os.ReadFile(path)
 	if err != nil {
-		fmt.Println(err)
+		slog.Error(err.Error())
 		return nil
 	}
 	matches := imageRegex.FindAllStringSubmatch(string(f), -1)
@@ -90,12 +91,10 @@ func (d *DockerImage) ToString(newtag bool) string {
 func (d *DockerImage) UpdateNomadFile(path string) {
 	f, err := os.ReadFile(path)
 	if err != nil {
-		fmt.Println(err)
+		slog.Error(err.Error())
 		return
 	}
 	r, _ := regexp.Compile(d.ToString(false))
-	fmt.Println(d.ToString(false))
-	fmt.Println(d.ToString(true))
 	newfile := r.ReplaceAllString(string(f), d.ToString(true))
 	stat, err := os.Stat(path)
 	err = os.WriteFile(path, []byte(newfile), stat.Mode())
@@ -116,7 +115,7 @@ func (d *DockerImage) GetUpdate() {
 	if d.TagType == "latest" {
 		return
 	} else if len(d.TagType) == 0 {
-		fmt.Println("No tag type detected")
+		slog.Info(fmt.Sprintf("No tag type detected for %s",d.Name),"image",d.Name)
 		return
 	}
 	r, _ := regexp.Compile(tagtype[d.TagType])

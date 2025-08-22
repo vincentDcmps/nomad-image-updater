@@ -1,9 +1,13 @@
 package config
 
 import (
+
 	"github.com/spf13/viper"
 )
 
+type LoggerOption struct {
+	Level string `mapstructure:"level"`
+}
 type GetTagReplaceURL struct {
 	Target string `mapstructure:"target"`
 	Replace string  `mapstructure:"replace"` 
@@ -34,6 +38,7 @@ func (r *RemoteOptions) Merge(r1 RemoteOptions) {
 type Config struct {
 	GetTagReplaceURL []GetTagReplaceURL
 	RemoteCustomOption []RemoteCustomOption `mapstructure:"remoteCustomOption"`
+	LoggerOption LoggerOption
 }
 
 var configPath = []string{
@@ -49,6 +54,7 @@ func GetConfig() Config {
 		viper.AddConfigPath(v)
 	}
 	viper.SetDefault("RemoteCustomOption", []RemoteCustomOption{})
+	viper.SetDefault("LoggerOption.Level", "DEBUG")
 	viper.ReadInConfig()
 	var config Config
 	viper.Unmarshal(&config)
