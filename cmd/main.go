@@ -50,14 +50,24 @@ func main() {
 		}
 	}
 	for _, nomadfile := range nomadfiles {
+		var gitfileupdater *git.GitFileUpdater
+		var err error
+		if config.Git.Enabled == true {
+			gitfileupdater, err = GitUpdater.NewGitFileUpdater(nomadfile)
+			if err != nil {
+				slog.Error(err.Error())
+				continue
+			}
+
+		}
 		for _, image := range nomadfile.Images {
 			if image.Update {
 				image.UpdateNomadFile(nomadfile.Path)
 				nomadfile.Updated = true
+				if config.Git.Enabled {
+					gitfileupdater.CommitImage(image)
+				}
 			}
-		}
-		if nomadfile.Updated == true && config.Git.Enabled == true {
-			GitUpdater.CreateUpdateBranch(nomadfile)
 		}
 	}
 }

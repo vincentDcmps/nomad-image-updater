@@ -3,11 +3,14 @@ package git
 import (
 	"fmt"
 	"log/slog"
+	"nomad-image-updater/internal/dockerImage"
 	"nomad-image-updater/internal/nomadfiles"
 	"os"
 
 	"github.com/go-git/go-git/v6"
 	"github.com/go-git/go-git/v6/plumbing"
+	"github.com/go-git/go-git/v6/plumbing/object"
+	"time"
 )
 
 type GitUpdater struct {
@@ -41,33 +44,61 @@ func NewGitUpdater(target string, refname string) (*GitUpdater, error) {
 	return &GitUpdater{Repository: r, ReferenceBranch: refbranchConfig.Merge}, nil
 }
 
-func (g *GitUpdater) CreateUpdateBranch(file *nomadfile.Nomadfile) bool {
+func (g *GitUpdater) NewGitFileUpdater(file *nomadfile.Nomadfile) (*GitFileUpdater, error) {
 	slog.Debug(file.GetFileName())
-	localref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", file.GetFileName()))
-	w, err := g.Repository.Worktree()
+	baseref, _ := g.Repository.Storer.Reference(g.ReferenceBranch)
+	localref := plumbing.ReferenceName(fmt.Sprintf("refs/heads/nomad-image-updater/%s", file.GetFileName()))
+	var c *plumbing.Reference
+	g.Repository.Head()
+	c = plumbing.NewHashReference(localref, baseref.Hash())
+	g.Repository.Storer.SetReference(c)
+	return &GitFileUpdater{
+		File:       file,
+		GitUpdater: g,
+		Branch:     c,
+	}, nil
+}
+
+type GitFileUpdater struct {
+	File       *nomadfile.Nomadfile
+	GitUpdater *GitUpdater
+	Branch     *plumbing.Reference
+}
+
+func (g *GitFileUpdater) CommitImage(image *dockerImage.DockerImage) bool {
+	slog.Debug(fmt.Sprintf("commit of image %s in file %s", g.File.Path, image.Name))
+	w, err := g.GitUpdater.Repository.Worktree()
 	if err != nil {
 		slog.Error(err.Error())
 		return false
 	}
 	err = w.Checkout(&git.CheckoutOptions{
-		Branch: localref, Create: true, Keep: true,
+		Branch: g.Branch.Name(), Keep: true,
 	})
 	if err != nil {
 		slog.Error(err.Error(), "stage", "Checkout")
 		return false
 	}
-	_, err = w.Add(file.Path)
+	_, err = w.Add(g.File.Path)
 	if err != nil {
 		slog.Error(err.Error(), "stage", "add")
 		return false
 	}
-	_, err = w.Commit(fmt.Sprintf("update: %s", file.GetFileName()), &git.CommitOptions{})
+	commitmsg := fmt.Sprintf("update (%s): %s to %s", g.File.GetFileName(), image.Name, image.NewTag)
+	_, err = w.Commit(commitmsg, &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  "nomad-image-updater",
+			Email: "",
+			When:  time.Now(),
+		},
+	})
 	if err != nil {
 		slog.Error(err.Error(), "stage", "commit")
 		return false
 	}
 	w.Checkout(&git.CheckoutOptions{
-		Branch: g.ReferenceBranch,
+		Branch: g.GitUpdater.ReferenceBranch,
 	})
 	return true
+
 }
