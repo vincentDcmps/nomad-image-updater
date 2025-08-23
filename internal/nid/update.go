@@ -1,4 +1,4 @@
-package main
+package nid
 
 import (
 	"fmt"
@@ -10,9 +10,8 @@ import (
 	"os"
 )
 
-func main() {
+func Update(target string) {
 	config := config.GetConfig()
-	target := os.Args[1]
 	lvl := &slog.LevelVar{}
 	lvl.UnmarshalText([]byte(config.LoggerOption.Level))
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
