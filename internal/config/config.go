@@ -62,6 +62,8 @@ func GetConfig() Config {
 	viper.SetDefault("Git.enabled", false)
 	viper.SetDefault("Git.refbranch", "master")
 	viper.ReadInConfig()
+	viper.SetEnvPrefix("NID")
+	viper.AutomaticEnv()
 	var config Config
 	viper.Unmarshal(&config)
 	return config

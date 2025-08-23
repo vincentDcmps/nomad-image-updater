@@ -28,19 +28,27 @@ config.yaml can be place to following location:
 - ~/.config/nomad-image-updater/
 - /etc/nomad-image-updater
 
-config file can have follwing setting
+all setting can be overide by an env variable with a prefix "NID\_"
 
-### remoteCustomOption
+### settings
+
+#### remoteCustomOption
 
 array containg a map of two following value:
 
 - contain: string to check if option need to be apply on docker repository
 - options: possible option are: username,password and insecureTLS
 
+#### LoggerOption
+
+#### Git
+
+#### GetTagReplaceURL
+
 ## ToDo
 
 - use cobra for command management
-- manage pull request from gitea 
+- manage pull request from gitea
 - manage url in argument to got directly git forge
 - use a meta in task to got release note link
 - create test
