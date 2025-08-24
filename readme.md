@@ -2,9 +2,17 @@
 
 Aim of this tool is to update docker image in nomad job.
 
-## Arguments
+## command
 
-take as argument target folder to lookup nomad file
+_if use with git feature need to be launch from git repository root_
+
+### Update
+
+take as argument target folder or file to lookup nomad file
+
+### Clean
+
+clean all branch in repository beginning by nomad-image-updater/
 
 ## image management
 
@@ -24,7 +32,7 @@ if some character are set in prefix or suffix of version lookup only tag with sa
 
 config.yaml can be place to following location:
 
-- ./config.yaml
+- ./nomad-image-updater.yaml
 - ~/.config/nomad-image-updater/
 - /etc/nomad-image-updater
 
@@ -34,20 +42,28 @@ all setting can be overide by an env variable with a prefix "NID\_"
 
 #### remoteCustomOption
 
-array containg a map of two following value:
+array containg  map of two following value:
 
 - contain: string to check if option need to be apply on docker repository
 - options: possible option are: username,password and insecureTLS
 
 #### LoggerOption
 
+- verbose
+
 #### Git
+
+- enabled
+- refbranch: branch name where new branch will be base
 
 #### GetTagReplaceURL
 
+array with  map toreplace a docker repository URL by another
+- target: target url to replace
+- replace: replacement URL
+
 ## ToDo
 
-- use cobra for command management
 - manage pull request from gitea
 - manage url in argument to got directly git forge
 - use a meta in task to got release note link
