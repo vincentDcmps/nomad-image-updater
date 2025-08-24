@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -85,7 +84,7 @@ func getDockerAuth(host string, name string) (string, error) {
 		return tokenResponse.Token, nil
 
 	} else {
-		return "", errors.New(fmt.Sprintf("unmanage auth return code %d", resp.StatusCode))
+		return "", fmt.Errorf("unmanage auth return code %d", resp.StatusCode)
 	}
 
 }

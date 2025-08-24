@@ -7,17 +7,10 @@ import (
 	"nomad-image-updater/internal/dockerImage"
 	"nomad-image-updater/internal/git"
 	"nomad-image-updater/internal/nomadfiles"
-	"os"
 )
 
 func Update(target string) {
 	config := config.GetConfig()
-	lvl := &slog.LevelVar{}
-	lvl.UnmarshalText([]byte(config.LoggerOption.Level))
-	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-		Level: lvl,
-	}))
-	slog.SetDefault(logger)
 	nomadfiles := nomadfile.GetNomadFiles(target)
 	var refImages dockerImage.DockerImageslist
 	var GitUpdater *git.GitUpdater
@@ -42,7 +35,7 @@ func Update(target string) {
 		slog.Debug(fmt.Sprintf("proccessing image %s", image.Name))
 		image.GetUpdate()
 		if image.Update {
-			slog.Info("image to update:",
+			slog.Info("image to update",
 				"name", image.Name,
 				"OldVersion", image.Tag,
 				"NewVersion", image.NewTag)
@@ -51,16 +44,15 @@ func Update(target string) {
 	for _, nomadfile := range nomadfiles {
 		var gitfileupdater *git.GitFileUpdater
 		var err error
-		if config.Git.Enabled == true {
-			gitfileupdater, err = GitUpdater.NewGitFileUpdater(nomadfile)
-			if err != nil {
-				slog.Error(err.Error())
-				continue
-			}
-
-		}
 		for _, image := range nomadfile.Images {
 			if image.Update {
+				if gitfileupdater == nil && config.Git.Enabled == true {
+					gitfileupdater, err = GitUpdater.NewGitFileUpdater(nomadfile)
+					if err != nil {
+						slog.Error(err.Error())
+						break
+					}
+				}
 				image.UpdateNomadFile(nomadfile.Path)
 				nomadfile.Updated = true
 				if config.Git.Enabled {

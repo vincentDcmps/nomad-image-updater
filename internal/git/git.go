@@ -7,10 +7,13 @@ import (
 	"nomad-image-updater/internal/nomadfiles"
 	"os"
 
+	"time"
+
 	"github.com/go-git/go-git/v6"
 	"github.com/go-git/go-git/v6/plumbing"
 	"github.com/go-git/go-git/v6/plumbing/object"
-	"time"
+
+	"strings"
 )
 
 type GitUpdater struct {
@@ -57,6 +60,23 @@ func (g *GitUpdater) NewGitFileUpdater(file *nomadfile.Nomadfile) (*GitFileUpdat
 		GitUpdater: g,
 		Branch:     c,
 	}, nil
+}
+
+func (g *GitUpdater)CleanBranch(pattern string) error {
+	branches,err:=g.Repository.Branches()
+	if err != nil {
+		return err
+	}
+	err=branches.ForEach(func(r *plumbing.Reference) error {
+			name:=r.Name()
+			if strings.Contains(name.String(),pattern){
+				slog.Info(fmt.Sprintf("deleting branch %s",name.String()))
+				err:=g.Repository.Storer.RemoveReference(name)
+				return err
+			}
+			return nil
+		})
+	return err
 }
 
 type GitFileUpdater struct {
