@@ -47,8 +47,8 @@ type Config struct {
 
 var configPath = []string{
 	".",
-	"~/.config/nomad-image-updater",
-	"/etc/nomad-image-updater",
+	"~/.config/",
+	"/etc/",
 }
 
 func GetConfig() Config {

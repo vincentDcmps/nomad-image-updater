@@ -1,4 +1,11 @@
+Git:
+  enabled: true
+  RefBranch: master
+  remoteType: gitea
+  remoteCreatePR: true
 
+LoggerOption
+  level: INFO
 
 remoteCustomOption:
 - contain: ghcr
