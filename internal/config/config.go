@@ -7,6 +7,9 @@ import (
 type Git struct {
 	Enabled   bool   `mapstructure:"enabled"`
 	RefBranch string `mapstructure:"refbranch"`
+	RemoteURL string `mapstructure:"remoteURL"`
+  RemoteCreatePR string `mapstructure:"remoteCreatePR"`
+  RemoteToken string `mapstructure:"remoteToken"`
 }
 type LoggerOption struct {
 	Level string `mapstructure:"level"`
@@ -64,6 +67,7 @@ func GetConfig() Config {
 	viper.ReadInConfig()
 	viper.SetEnvPrefix("NID")
 	viper.AutomaticEnv()
+	viper.BindEnv("Git.RemoteToken","NID_GIT_REMOTETOKEN")
 	var config Config
 	viper.Unmarshal(&config)
 	return config

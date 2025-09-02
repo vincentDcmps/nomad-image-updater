@@ -2,7 +2,9 @@ Git:
   enabled: true
   RefBranch: master
   remoteType: gitea
-  remoteCreatePR: true
+  remoteURL: ""
+  remoteCreatePR: gitea
+  remoteToken
 
 LoggerOption
   level: INFO

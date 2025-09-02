@@ -6,6 +6,7 @@ import (
 	"nomad-image-updater/internal/config"
 	"nomad-image-updater/internal/dockerImage"
 	"nomad-image-updater/internal/git"
+	"nomad-image-updater/internal/git/giteaRemote"
 	"nomad-image-updater/internal/nomadfiles"
 )
 
@@ -21,6 +22,9 @@ func Update(target string) {
 		if err != nil {
 			slog.Error(err.Error())
 			return
+		}
+		if (config.Git.RemoteCreatePR == "gitea"){
+			GitUpdater.Remote= giteaRemote.NewGiteaRemote(config.Git.RemoteURL,config.Git.RemoteToken)
 		}
 	}
 	for _, file := range nomadfiles {
@@ -58,6 +62,18 @@ func Update(target string) {
 				if config.Git.Enabled {
 					gitfileupdater.CommitImage(image)
 				}
+			}
+		}
+
+		if (nomadfile.Updated ==true && config.Git.Enabled ==true && config.Git.RemoteURL != "" && config.Git.RemoteToken != ""){
+			err:=gitfileupdater.Push(config.Git.RemoteURL,config.Git.RemoteToken)
+			if(err != nil){
+				slog.Error(err.Error())
+				break
+			}
+			slog.Debug(fmt.Sprintf("%#v",gitfileupdater.GitUpdater.Remote))
+			if gitfileupdater.GitUpdater.Remote != nil {
+				gitfileupdater.CreatePR()
 			}
 		}
 	}

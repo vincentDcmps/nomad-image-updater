@@ -9,16 +9,23 @@ import (
 
 	"time"
 
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v6"
+	"github.com/go-git/go-git/v6/config"
 	"github.com/go-git/go-git/v6/plumbing"
 	"github.com/go-git/go-git/v6/plumbing/object"
 
 	"strings"
 )
 
+type GitRemoteInterface interface {
+		CreatePR(head string,base string,title string) error
+}
+
 type GitUpdater struct {
 	Repository      *git.Repository
 	ReferenceBranch plumbing.ReferenceName
+	Remote 					GitRemoteInterface
 }
 
 func NewGitUpdater(target string, refname string) (*GitUpdater, error) {
@@ -118,7 +125,29 @@ func (g *GitFileUpdater) CommitImage(image *dockerImage.DockerImage) bool {
 	}
 	w.Checkout(&git.CheckoutOptions{
 		Branch: g.GitUpdater.ReferenceBranch,
-	})
-	return true
+		})
 
+	return true
+}
+
+func (g *GitFileUpdater) Push (remote string, token string) error {
+	refspec := config.RefSpec(fmt.Sprintf("%s:%s",g.Branch.Name().String(),g.Branch.Name().String()))
+	slog.Debug(refspec.String())
+	pushoptions := git.PushOptions{
+		RemoteURL: remote,
+		RefSpecs:  []config.RefSpec{refspec},
+		Force: true,
+		Auth: &http.TokenAuth{
+			Token: token,
+		}	}
+	err:=g.GitUpdater.Repository.Push(&pushoptions)
+	return err
+}
+
+func(g *GitFileUpdater) CreatePR(){
+	slog.Info(fmt.Sprintf("create PR for %s",g.Branch.Name().Short()))
+	err:=g.GitUpdater.Remote.CreatePR(g.Branch.Name().Short(),g.GitUpdater.ReferenceBranch.Short(),g.Branch.Name().Short())
+	if err != nil{
+		slog.Error(err.Error())
+	}
 }
