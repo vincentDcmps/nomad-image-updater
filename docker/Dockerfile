@@ -8,4 +8,4 @@ FROM alpine
 
 COPY --from=builder /app/dist/nomad-image-updater /app/nomad-image-updater
 VOLUME [ "/src" ]
-CMD ["/app/nomad-image-updater", "/src"]
+CMD ["/app/nomad-image-updater","update", "/src"]
