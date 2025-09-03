@@ -29,28 +29,33 @@ type GitUpdater struct {
 }
 
 func NewGitUpdater(target string, refname string) (*GitUpdater, error) {
+	var trycurrentdir = true
+	var r *git.Repository
+	var err error
 	file, _ := os.Open(target)
 	defer file.Close()
 	fileinfo, _ := file.Stat()
 	if fileinfo.IsDir() {
-		r, err := git.PlainOpen(target)
+		r, err = git.PlainOpen(target)
 		if err == nil {
-			slog.Debug(fmt.Sprintf("Repo found in target: %s", target))
-			return &GitUpdater{Repository: r, ReferenceBranch: plumbing.ReferenceName(refname)}, nil
+			trycurrentdir = false
 		}
 	}
-	currentpath, _ := os.Getwd()
-	r, err := git.PlainOpen(currentpath)
-	if err != nil {
-		slog.Debug("repository not found")
-		return &GitUpdater{}, err
+	if trycurrentdir {
+		currentpath, _ := os.Getwd()
+		r, err = git.PlainOpen(currentpath)
+		if err != nil {
+			slog.Debug("repository not found")
+			return &GitUpdater{}, err
+		}
+		slog.Debug(fmt.Sprintf("Repo found in %s", currentpath))
 	}
-	slog.Debug(fmt.Sprintf("Repo found in %s", currentpath))
 	refbranchConfig, err := r.Branch(refname)
 	if err != nil {
 		slog.Error(err.Error())
 		return &GitUpdater{}, err
 	}
+	
 	return &GitUpdater{Repository: r, ReferenceBranch: refbranchConfig.Merge}, nil
 }
 
