@@ -1,7 +1,6 @@
 package repoImage
 
 import (
-	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -12,27 +11,24 @@ import (
 	"github.com/gboddin/go-www-authenticate-parser"
 )
 
+
 type DockerRepo struct {
 }
 
 func (d *DockerRepo) Getreleases(host string, name string, remoteOptions config.RemoteOptions) []string {
-	if remoteOptions.InsecureTLS {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	} else {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: false}
-	}
+	httpClient := httpclient( remoteOptions.InsecureTLS )
+	
 	tagsurl, _ := url.Parse(fmt.Sprintf("https://%s/v2/%s/tags/list", host, name))
-	authHeader, err := getDockerAuth(tagsurl.Host, name, remoteOptions)
+	authHeader, err := getDockerAuth(httpClient,tagsurl.Host, name, remoteOptions)
 	if err != nil {
 		slog.Error(err.Error(), "host", host, "name", name)
 		return nil
 	}
-	client := http.Client{}
 	req, err := http.NewRequest("GET", tagsurl.String(), nil)
 	if authHeader != "" {
 		req.Header.Add("authorization", fmt.Sprintf("Bearer %s", authHeader))
 	}
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		slog.Error(err.Error())
 		return nil
@@ -53,13 +49,8 @@ func (d *DockerRepo) Validaterepo(repo string) bool {
 	}
 }
 
-func getDockerAuth(host string, name string, opt config.RemoteOptions) (string, error) {
-	if opt.InsecureTLS {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	} else {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: false}
-	}
-	resp, err := http.Get(fmt.Sprintf("https://%s/v2/_catalog", host))
+func getDockerAuth(httpClient *http.Client,host string, name string, opt config.RemoteOptions) (string, error) {
+	resp, err := httpClient.Get(fmt.Sprintf("https://%s/v2/_catalog", host))
 	if err != nil {
 		return "", err
 	}
@@ -71,12 +62,11 @@ func getDockerAuth(host string, name string, opt config.RemoteOptions) (string, 
 		service := wwwAuthenticateHeader.Params["service"]
 		scope := fmt.Sprintf("repository:%s:pull", name)
 		urlToken := fmt.Sprintf("%s?scope=%s&service=%s", realm, scope, service)
-		client := http.Client{}
 		req, err := http.NewRequest("GET", urlToken, nil)
 		if opt.Username != "" && opt.Password != "" {
 			req.Header.Add("Authorisation", basicAuth(opt.Username, opt.Password))
 		}
-		resp, err := client.Do(req)
+		resp, err := httpClient.Do(req)
 		if err != nil {
 			return "", err
 		}
@@ -89,6 +79,7 @@ func getDockerAuth(host string, name string, opt config.RemoteOptions) (string, 
 	}
 
 }
+
 
 type tokenResponse struct {
 	Token string `json:"token"`

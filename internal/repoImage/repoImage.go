@@ -2,6 +2,8 @@ package repoImage
 
 import (
 	"nomad-image-updater/internal/config"
+	"net/http"
+	"crypto/tls"
 )
 
 type repoImage interface {
@@ -15,4 +17,12 @@ func GetMapRepo() map[string]repoImage {
 		"docker":    &DockerRepo{},
 	}
 	return m
+}
+
+
+func httpclient (insecure bool) *http.Client {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+	}
+	return &http.Client{Transport: tr}
 }

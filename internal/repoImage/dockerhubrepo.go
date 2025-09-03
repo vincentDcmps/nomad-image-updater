@@ -1,11 +1,9 @@
 package repoImage
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"nomad-image-updater/internal/config"
 	"strings"
 )
@@ -28,11 +26,7 @@ type DockerhubRepo struct {
 }
 
 func (d *DockerhubRepo) Getreleases(host string, name string, remoteOptions config.RemoteOptions) []string {
-	if remoteOptions.InsecureTLS {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	} else {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: false}
-	}
+	httpClient := httpclient(remoteOptions.InsecureTLS)
 	if strings.Contains(name, "/") == false {
 		name = fmt.Sprintf("library/%s", name)
 	}
@@ -40,7 +34,7 @@ func (d *DockerhubRepo) Getreleases(host string, name string, remoteOptions conf
 		host = DockerhubURL
 	}
 	url := fmt.Sprintf("https://%s/v2/repositories/%s/tags?page_size=1000&ordering=last_updated", host, name)
-	resp, err := http.Get(url)
+	resp, err := httpClient.Get(url)
 	if err != nil {
 		return nil
 	}
