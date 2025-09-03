@@ -100,12 +100,14 @@ func (g *GitFileUpdater) CommitImage(image *dockerImage.DockerImage) bool {
 		return false
 	}
 	err = w.Checkout(&git.CheckoutOptions{
-		Branch: g.Branch.Name(), Keep: true,
+		Branch: g.Branch.Name(), 
 	})
 	if err != nil {
 		slog.Error(err.Error(), "stage", "Checkout")
 		return false
 	}
+
+	image.UpdateNomadFile(g.File.Path)
 	_, err = w.Add(g.File.Path)
 	if err != nil {
 		slog.Error(err.Error(), "stage", "add")

@@ -57,11 +57,12 @@ func Update(target string) {
 						break
 					}
 				}
-				image.UpdateNomadFile(nomadfile.Path)
-				nomadfile.Updated = true
 				if config.Git.Enabled {
 					gitfileupdater.CommitImage(image)
+				}else{
+					image.UpdateNomadFile(nomadfile.Path)
 				}
+				nomadfile.Updated = true
 			}
 		}
 

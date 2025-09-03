@@ -64,7 +64,6 @@ array with  map toreplace a docker repository URL by another
 
 ## ToDo
 
-- manage pull request from gitea
-- manage url in argument to got directly git forge
+- get image update in go routine
 - use a meta in task to got release note link
 - create test
