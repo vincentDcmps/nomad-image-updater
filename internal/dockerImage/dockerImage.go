@@ -102,6 +102,9 @@ func (d *DockerImage) UpdateNomadFile(path string) {
 	newfile := r.ReplaceAllString(string(f), d.ToString(true))
 	stat, err := os.Stat(path)
 	err = os.WriteFile(path, []byte(newfile), stat.Mode())
+	if (err != nil){
+		slog.Error(err.Error())
+	}
 
 }
 
@@ -117,6 +120,7 @@ func (d *DockerImage) getTags() []string {
 
 func (d *DockerImage) GetUpdate(done chan bool) {
 	if d.TagType == "latest" {
+		slog.Info(fmt.Sprintf("image %s on latest",d.Name), "image", d.Name)
 		done <- true
 		return
 	} else if len(d.TagType) == 0 {
