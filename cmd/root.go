@@ -1,23 +1,20 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
-	"os"
 	"github.com/spf13/cobra"
-	"nomad-image-updater/internal/config"
 	"log/slog"
+	"nomad-image-updater/internal/config"
+	"os"
 )
-
-
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "nomad-image-updater",
 	Short: "light tool to update docker image in nomad file",
-	Long: `A longer descriptiolication.`,
+	Long:  `A longer descriptiolication.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
@@ -41,7 +38,7 @@ func init() {
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	config:=config.GetConfig()
+	config := config.GetConfig()
 	lvl := &slog.LevelVar{}
 	lvl.UnmarshalText([]byte(config.LoggerOption.Level))
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
@@ -50,4 +47,3 @@ func init() {
 	slog.SetDefault(logger)
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-

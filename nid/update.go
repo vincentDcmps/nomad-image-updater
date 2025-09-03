@@ -23,27 +23,27 @@ func Update(target string) {
 			slog.Error(err.Error())
 			return
 		}
-		if (config.Git.RemoteCreatePR == "gitea"){
-			GitUpdater.Remote= giteaRemote.NewGiteaRemote(config.Git.RemoteURL,config.Git.RemoteToken)
+		if config.Git.RemoteCreatePR == "gitea" {
+			GitUpdater.Remote = giteaRemote.NewGiteaRemote(config.Git.RemoteURL, config.Git.RemoteToken)
 		}
 	}
 	for _, file := range nomadfiles {
-		fileimages := dockerImage.NewDockerImageFromNomadFile(file.Path)
+		fileimages := dockerImage.NewDockerImageFromNomadFile(config, file.Path)
 		for _, fileimage := range fileimages {
 			imageptr := refImages.Addimage(fileimage)
 			file.Images = append(file.Images, imageptr)
 		}
 	}
-	slog.Info(fmt.Sprintf("container image to process: %d", len(refImages)))
+	slog.Info(fmt.Sprintf("image to process: %d", len(refImages)))
+	done := make(chan bool)
 	for _, image := range refImages {
 		slog.Debug(fmt.Sprintf("proccessing image %s", image.Name))
-		image.GetUpdate()
-		if image.Update {
-			slog.Info("image to update",
-				"name", image.Name,
-				"OldVersion", image.Tag,
-				"NewVersion", image.NewTag)
-		}
+
+		go image.GetUpdate(done)
+	}
+	for i := 1; i <= len(refImages); i++ {
+		<-done
+		slog.Info(fmt.Sprintf("%d/%d images processed", i, len(refImages)))
 	}
 	for _, nomadfile := range nomadfiles {
 		var gitfileupdater *git.GitFileUpdater
@@ -59,20 +59,20 @@ func Update(target string) {
 				}
 				if config.Git.Enabled {
 					gitfileupdater.CommitImage(image)
-				}else{
+				} else {
 					image.UpdateNomadFile(nomadfile.Path)
 				}
 				nomadfile.Updated = true
 			}
 		}
 
-		if (nomadfile.Updated ==true && config.Git.Enabled ==true && config.Git.RemoteURL != "" && config.Git.RemoteToken != ""){
-			err:=gitfileupdater.Push(config.Git.RemoteURL,config.Git.RemoteToken)
-			if(err != nil){
+		if nomadfile.Updated == true && config.Git.Enabled == true && config.Git.RemoteURL != "" && config.Git.RemoteToken != "" {
+			err := gitfileupdater.Push(config.Git.RemoteURL, config.Git.RemoteToken)
+			if err != nil {
 				slog.Error(err.Error())
 				break
 			}
-			slog.Debug(fmt.Sprintf("%#v",gitfileupdater.GitUpdater.Remote))
+			slog.Debug(fmt.Sprintf("%#v", gitfileupdater.GitUpdater.Remote))
 			if gitfileupdater.GitUpdater.Remote != nil {
 				gitfileupdater.CreatePR()
 			}

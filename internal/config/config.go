@@ -2,21 +2,18 @@ package config
 
 import (
 	"github.com/spf13/viper"
+	"strings"
 )
 
 type Git struct {
-	Enabled   bool   `mapstructure:"enabled"`
-	RefBranch string `mapstructure:"refbranch"`
-	RemoteURL string `mapstructure:"remoteURL"`
-  RemoteCreatePR string `mapstructure:"remoteCreatePR"`
-  RemoteToken string `mapstructure:"remoteToken"`
+	Enabled        bool   `mapstructure:"enabled"`
+	RefBranch      string `mapstructure:"refbranch"`
+	RemoteURL      string `mapstructure:"remoteURL"`
+	RemoteCreatePR string `mapstructure:"remoteCreatePR"`
+	RemoteToken    string `mapstructure:"remoteToken"`
 }
 type LoggerOption struct {
 	Level string `mapstructure:"level"`
-}
-type GetTagReplaceURL struct {
-	Target  string `mapstructure:"target"`
-	Replace string `mapstructure:"replace"`
 }
 type RemoteCustomOption struct {
 	Contain string        `mapstructure:"contain"`
@@ -42,7 +39,6 @@ func (r *RemoteOptions) Merge(r1 RemoteOptions) {
 }
 
 type Config struct {
-	GetTagReplaceURL   []GetTagReplaceURL
 	RemoteCustomOption []RemoteCustomOption `mapstructure:"remoteCustomOption"`
 	LoggerOption       LoggerOption
 	Git                Git
@@ -67,8 +63,18 @@ func GetConfig() Config {
 	viper.ReadInConfig()
 	viper.SetEnvPrefix("NID")
 	viper.AutomaticEnv()
-	viper.BindEnv("Git.RemoteToken","NID_GIT_REMOTETOKEN")
+	viper.BindEnv("Git.RemoteToken", "NID_GIT_REMOTETOKEN")
 	var config Config
 	viper.Unmarshal(&config)
 	return config
+}
+
+func GetRemoteOptions(host string, RemoteCustomOption []RemoteCustomOption) RemoteOptions {
+	option := RemoteOptions{}
+	for _, remote := range RemoteCustomOption {
+		if strings.Contains(host, remote.Contain) {
+			option.Merge(remote.Options)
+		}
+	}
+	return option
 }

@@ -1,10 +1,12 @@
 package repoImage
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"nomad-image-updater/internal/config"
 	"strings"
 )
 
@@ -25,7 +27,12 @@ type DockertagJSONResponse struct {
 type DockerhubRepo struct {
 }
 
-func (d *DockerhubRepo) Getreleases(host string, name string) []string {
+func (d *DockerhubRepo) Getreleases(host string, name string, remoteOptions config.RemoteOptions) []string {
+	if remoteOptions.InsecureTLS {
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	} else {
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: false}
+	}
 	if strings.Contains(name, "/") == false {
 		name = fmt.Sprintf("library/%s", name)
 	}

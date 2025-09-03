@@ -2,11 +2,13 @@ package dockerImage
 
 import (
 	"fmt"
-	"github.com/hashicorp/go-version"
 	"log/slog"
+	"nomad-image-updater/internal/config"
 	"nomad-image-updater/internal/repoImage"
 	"os"
 	"regexp"
+
+	"github.com/hashicorp/go-version"
 )
 
 type DockerImageslist []*DockerImage
@@ -37,16 +39,18 @@ var tagtype = map[string]string{
 }
 
 type DockerImage struct {
-	URL     string
-	Name    string
-	Tag     string
-	TagType string
-	NewTag  string
-	Update  bool
+	URL           string
+	Name          string
+	Tag           string
+	TagType       string
+	NewTag        string
+	Update        bool
+	RemoteOptions config.RemoteOptions
 }
 
-func NewDockerImage(URL string, name string, tag string) DockerImage {
+func NewDockerImage(configObj config.Config, URL string, name string, tag string) DockerImage {
 	var im DockerImage
+	im.RemoteOptions = config.GetRemoteOptions(URL, configObj.RemoteCustomOption)
 	im.URL = URL
 	im.Name = name
 	im.Tag = tag
@@ -62,7 +66,7 @@ func NewDockerImage(URL string, name string, tag string) DockerImage {
 	return im
 }
 
-func NewDockerImageFromNomadFile(path string) DockerImageslist {
+func NewDockerImageFromNomadFile(configObj config.Config, path string) DockerImageslist {
 	var resp DockerImageslist
 	imageRegex, _ := regexp.Compile(`image\s*=\s*\"(?P<repo>(?P<URL>[^:@\n\/]*\.[^:@\n\/]*(:\d*)?\/)?(?P<image>[^:@\n]*))(:(?P<tag>[^:@\n]*))?(@.*:.*)?\"`)
 	f, err := os.ReadFile(path)
@@ -72,7 +76,7 @@ func NewDockerImageFromNomadFile(path string) DockerImageslist {
 	}
 	matches := imageRegex.FindAllStringSubmatch(string(f), -1)
 	for _, match := range matches {
-		image := NewDockerImage(match[imageRegex.SubexpIndex("URL")],
+		image := NewDockerImage(configObj, match[imageRegex.SubexpIndex("URL")],
 			match[imageRegex.SubexpIndex("image")],
 			match[imageRegex.SubexpIndex("tag")])
 		resp = append(resp, &image)
@@ -104,18 +108,20 @@ func (d *DockerImage) UpdateNomadFile(path string) {
 func (d *DockerImage) getTags() []string {
 	for _, v := range repoImage.GetMapRepo() {
 		if v.Validaterepo(d.URL) {
-			releasesList := v.Getreleases(d.URL, d.Name)
+			releasesList := v.Getreleases(d.URL, d.Name, d.RemoteOptions)
 			return releasesList
 		}
 	}
 	return nil
 }
 
-func (d *DockerImage) GetUpdate() {
+func (d *DockerImage) GetUpdate(done chan bool) {
 	if d.TagType == "latest" {
+		done <- true
 		return
 	} else if len(d.TagType) == 0 {
 		slog.Info(fmt.Sprintf("No tag type detected for %s", d.Name), "image", d.Name)
+		done <- true
 		return
 	}
 	r, _ := regexp.Compile(tagtype[d.TagType])
@@ -139,4 +145,12 @@ func (d *DockerImage) GetUpdate() {
 		}
 
 	}
+	if d.Update {
+		slog.Info("image to update",
+			"image", d.Name,
+			"OldVersion", d.Tag,
+			"NewVersion", d.NewTag)
+
+	}
+	done <- true
 }

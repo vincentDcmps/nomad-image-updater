@@ -9,20 +9,22 @@ import (
 	"net/http"
 	"net/url"
 	"nomad-image-updater/internal/config"
-	"strings"
-
 	"github.com/gboddin/go-www-authenticate-parser"
 )
 
 type DockerRepo struct {
 }
 
-func (d *DockerRepo) Getreleases(host string, name string) []string {
-	host = replaceUrl(host)
+func (d *DockerRepo) Getreleases(host string, name string, remoteOptions config.RemoteOptions) []string {
+	if remoteOptions.InsecureTLS {
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	} else {
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: false}
+	}
 	tagsurl, _ := url.Parse(fmt.Sprintf("https://%s/v2/%s/tags/list", host, name))
-	authHeader, err := getDockerAuth(tagsurl.Host, name)
+	authHeader, err := getDockerAuth(tagsurl.Host, name, remoteOptions)
 	if err != nil {
-		slog.Error(err.Error())
+		slog.Error(err.Error(), "host", host, "name", name)
 		return nil
 	}
 	client := http.Client{}
@@ -51,13 +53,7 @@ func (d *DockerRepo) Validaterepo(repo string) bool {
 	}
 }
 
-func getDockerAuth(host string, name string) (string, error) {
-	opt := getRemoteOptions(host)
-	if opt.InsecureTLS {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	} else {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: false}
-	}
+func getDockerAuth(host string, name string, opt config.RemoteOptions) (string, error) {
 	resp, err := http.Get(fmt.Sprintf("https://%s/v2/_catalog", host))
 	if err != nil {
 		return "", err
@@ -101,26 +97,6 @@ type tagsListResponse struct {
 func basicAuth(username, password string) string {
 	auth := username + ":" + password
 	return base64.StdEncoding.EncodeToString([]byte(auth))
-}
-func replaceUrl(host string) string {
-	config := config.GetConfig()
-	for _, getTagReplaceURL := range config.GetTagReplaceURL {
-		if strings.Contains(host, getTagReplaceURL.Target) {
-			return getTagReplaceURL.Replace
-		}
-	}
-	return host
-}
-
-func getRemoteOptions(host string) config.RemoteOptions {
-	option := config.RemoteOptions{}
-	config := config.GetConfig()
-	for _, remote := range config.RemoteCustomOption {
-		if strings.Contains(host, remote.Contain) {
-			option.Merge(remote.Options)
-		}
-	}
-	return option
 }
 
 //"https://ghcr.io/token?scope=repository:docker-mailserver/docker-mailserver:pull&service=ghcr.io" -a "vincent@ducamps.eu:githubpat"

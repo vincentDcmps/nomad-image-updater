@@ -1,12 +1,11 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
-	"nomad-image-updater/nid"
 	"github.com/spf13/cobra"
+	"nomad-image-updater/nid"
 )
 
 // UpdateCmd represents the Update command

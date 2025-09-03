@@ -6,10 +6,10 @@ import (
 	"nomad-image-updater/internal/git"
 )
 
-func Clean () {
+func Clean() {
 	config := config.GetConfig()
-	gitUpdater,err := git.NewGitUpdater(".",config.Git.RefBranch)
-	if err !=nil {
+	gitUpdater, err := git.NewGitUpdater(".", config.Git.RefBranch)
+	if err != nil {
 		slog.Error(err.Error())
 		return
 	}
@@ -18,5 +18,5 @@ func Clean () {
 		slog.Error(err.Error())
 	}
 	slog.Info("Sucess clean nomad-image-updater branch")
-	
+
 }

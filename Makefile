@@ -3,7 +3,7 @@ DOCKER_IMAGE:= nomad-image-updater
 
 
 build:
-	go build -o dist/nomad-image-updater cmd/main.go
+	go build -o dist/nomad-image-updater main.go
 
 format:
 	go fmt ./...

@@ -19,13 +19,13 @@ import (
 )
 
 type GitRemoteInterface interface {
-		CreatePR(head string,base string,title string) error
+	CreatePR(head string, base string, title string) error
 }
 
 type GitUpdater struct {
 	Repository      *git.Repository
 	ReferenceBranch plumbing.ReferenceName
-	Remote 					GitRemoteInterface
+	Remote          GitRemoteInterface
 }
 
 func NewGitUpdater(target string, refname string) (*GitUpdater, error) {
@@ -69,20 +69,20 @@ func (g *GitUpdater) NewGitFileUpdater(file *nomadfile.Nomadfile) (*GitFileUpdat
 	}, nil
 }
 
-func (g *GitUpdater)CleanBranch(pattern string) error {
-	branches,err:=g.Repository.Branches()
+func (g *GitUpdater) CleanBranch(pattern string) error {
+	branches, err := g.Repository.Branches()
 	if err != nil {
 		return err
 	}
-	err=branches.ForEach(func(r *plumbing.Reference) error {
-			name:=r.Name()
-			if strings.Contains(name.String(),pattern){
-				slog.Info(fmt.Sprintf("deleting branch %s",name.String()))
-				err:=g.Repository.Storer.RemoveReference(name)
-				return err
-			}
-			return nil
-		})
+	err = branches.ForEach(func(r *plumbing.Reference) error {
+		name := r.Name()
+		if strings.Contains(name.String(), pattern) {
+			slog.Info(fmt.Sprintf("deleting branch %s", name.String()))
+			err := g.Repository.Storer.RemoveReference(name)
+			return err
+		}
+		return nil
+	})
 	return err
 }
 
@@ -100,7 +100,7 @@ func (g *GitFileUpdater) CommitImage(image *dockerImage.DockerImage) bool {
 		return false
 	}
 	err = w.Checkout(&git.CheckoutOptions{
-		Branch: g.Branch.Name(), 
+		Branch: g.Branch.Name(),
 	})
 	if err != nil {
 		slog.Error(err.Error(), "stage", "Checkout")
@@ -127,29 +127,29 @@ func (g *GitFileUpdater) CommitImage(image *dockerImage.DockerImage) bool {
 	}
 	w.Checkout(&git.CheckoutOptions{
 		Branch: g.GitUpdater.ReferenceBranch,
-		})
+	})
 
 	return true
 }
 
-func (g *GitFileUpdater) Push (remote string, token string) error {
-	refspec := config.RefSpec(fmt.Sprintf("%s:%s",g.Branch.Name().String(),g.Branch.Name().String()))
+func (g *GitFileUpdater) Push(remote string, token string) error {
+	refspec := config.RefSpec(fmt.Sprintf("%s:%s", g.Branch.Name().String(), g.Branch.Name().String()))
 	slog.Debug(refspec.String())
 	pushoptions := git.PushOptions{
 		RemoteURL: remote,
 		RefSpecs:  []config.RefSpec{refspec},
-		Force: true,
+		Force:     true,
 		Auth: &http.TokenAuth{
 			Token: token,
-		}	}
-	err:=g.GitUpdater.Repository.Push(&pushoptions)
+		}}
+	err := g.GitUpdater.Repository.Push(&pushoptions)
 	return err
 }
 
-func(g *GitFileUpdater) CreatePR(){
-	slog.Info(fmt.Sprintf("create PR for %s",g.Branch.Name().Short()))
-	err:=g.GitUpdater.Remote.CreatePR(g.Branch.Name().Short(),g.GitUpdater.ReferenceBranch.Short(),g.Branch.Name().Short())
-	if err != nil{
+func (g *GitFileUpdater) CreatePR() {
+	slog.Info(fmt.Sprintf("create PR for %s", g.Branch.Name().Short()))
+	err := g.GitUpdater.Remote.CreatePR(g.Branch.Name().Short(), g.GitUpdater.ReferenceBranch.Short(), g.Branch.Name().Short())
+	if err != nil {
 		slog.Error(err.Error())
 	}
 }
