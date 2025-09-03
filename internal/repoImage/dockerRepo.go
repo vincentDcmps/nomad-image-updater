@@ -54,6 +54,11 @@ func (d *DockerRepo) Validaterepo(repo string) bool {
 }
 
 func getDockerAuth(host string, name string, opt config.RemoteOptions) (string, error) {
+	if opt.InsecureTLS {
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	} else {
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: false}
+	}
 	resp, err := http.Get(fmt.Sprintf("https://%s/v2/_catalog", host))
 	if err != nil {
 		return "", err
